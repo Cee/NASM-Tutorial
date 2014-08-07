@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<!-- saved from url=(0040)http://cirnocee.github.io/NASM-Examples/ -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<title>NASM Examples</title>
+<link rel="stylesheet" type="text/css" href="./NASM Examples_files/default.css">
+<link rel="stylesheet" type="text/css" href="./NASM Examples_files/prettify.css">
+<script type="text/javascript" src="./NASM Examples_files/prettify.js"></script><style type="text/css"></style><style type="text/css"></style>
+</head>
+<body class="coursenotes">
+<script type="text/javascript">onload = prettyPrint;</script>
+<div class="container">
+<div class="innercontent">
+<h1>NASM Examples</h1>
+
+<div class="abstract">NASM is a pretty awesome assembler.  Let's learn some NASM programming by example.
+These notes barely scratch the surface of what you can do, so after you've gone through this page,
+you'll need to hit the <a href="http://www.nasm.us/doc/">official NASM documentation</a>.</div>
+
+<h2>Preliminaries</h2>
+
+<p>Please note: all of these examples, except for those in the last few sections, will <strong>only run on a
+modern 64-bit Linux installation</strong>.</p>
+
+<p>Make sure both nasm and gcc are installed.</p>
+
+<h2>Getting Started</h2>
+
+<p>Our first program will use Linux system call 1 to write a message and Linux system call 60 to
+exit.</p>
+
+<div class="filename"><span>hello.asm</span></div><pre class="prettyprint lang-asm"><span class="com"><span class="com">; ----------------------------------------------------------------------------------------</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; Writes "Hello, World" to the console using only system calls. Runs on 64-bit Linux only.</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; To assemble and run:</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">;</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; &nbsp; &nbsp; nasm -felf64 hello.asm &amp;&amp; ld hello.o &amp;&amp; ./a.out</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; ----------------------------------------------------------------------------------------</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; global &nbsp;_start<br><br>&nbsp; &nbsp; &nbsp; &nbsp; section .text<br>_start:<br>&nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; write(1, message, 13)</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln">, 1 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; system call 1 is write</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln">, 1 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; file handle 1 is stdout</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rsi</span></span><span class="pln"><span class="pln">, message &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; address of string to output</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rdx</span></span><span class="pln"><span class="pln">, 13 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; number of bytes</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; syscall &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; invoke operating system to do the write</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; exit(0)</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">eax</span></span><span class="pln"><span class="pln">, 60 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; system call 60 is exit</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; xor &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln">, </span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; exit code 0</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; syscall &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; invoke operating system to exit</span></span><span class="pln"><span class="pln"><br>message:<br>&nbsp; &nbsp; &nbsp; &nbsp; db &nbsp; &nbsp; &nbsp;"Hello, World", 10 &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; note the newline at the end</span></span></pre>
+<pre class="console">$ <kbd>nasm -felf64 hello.asm &amp;&amp; ld hello.o &amp;&amp; ./a.out</kbd>
+Hello, World
+</pre>
+
+<h2>Using a C Library</h2>
+
+<p>Remember how in C execution seems to start with "main"?  That's because the C library actually has
+the <code>_start</code> label inside itself!  The code at <code>_start</code> does some initialization,
+then it calls <code>main</code>, then it does some clean up, then it issues system call 60.  So you
+just have to implement <code>main</code>.  We can do that in assembly:
+
+</p><div class="filename"><span>hola.asm</span></div><pre class="prettyprint lang-asm"><span class="com"><span class="com">; ----------------------------------------------------------------------------------------</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; Writes "Hola, mundo" to the console using a C library. Runs on Linux or any other system</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; that does not use underscores for symbols in its C library. To assemble and run:</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">;</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; &nbsp; &nbsp; nasm -felf64 hola.asm &amp;&amp; gcc hola.o &amp;&amp; ./a.out</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; ----------------------------------------------------------------------------------------</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; global &nbsp;main<br>&nbsp; &nbsp; &nbsp; &nbsp; extern &nbsp;puts<br><br>&nbsp; &nbsp; &nbsp; &nbsp; section .text<br>main: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; This is called by the C library startup code</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln">, message &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; First integer (or pointer) argument in rdi</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; call &nbsp; &nbsp;puts &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; puts(message)</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; ret &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; Return from main back into C library wrapper</span></span><span class="pln"><span class="pln"><br>message:<br>&nbsp; &nbsp; &nbsp; &nbsp; db &nbsp; &nbsp; &nbsp;"Hola, mundo", 0 &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; Note strings must be terminated with 0 in C</span></span></pre>
+<pre class="console">$ <kbd>nasm -felf64 hola.asm &amp;&amp; gcc hola.o &amp;&amp; ./a.out</kbd>
+Hola, mundo
+</pre>
+
+<h2>Understanding Calling Conventions</h2>
+
+<p>When writing code for 64-bit Linux that integrates with a C library, you must follow the
+calling conventions, explained fully in the
+<a href="http://www.x86-64.org/documentation/abi.pdf">AMD64 ABI Reference</a>.
+You can also get this information from
+<a href="http://en.wikipedia.org/wiki/X86_calling_conventions#x86-64_Calling_Conventions">Wikipedia</a>.
+The most important points are:</p>
+<ul class="spaced">
+<li>From left to right, pass as many parameters as will fit in registers.  The order in which
+registers are allocated, are:
+  <ul class="compressed">
+    <li>For integers and pointers, <code>rdi</code>, <code>rsi</code>, <code>rdx</code>,
+        <code>rcx</code>, <code>r8</code>, <code>r9</code>.
+    </li><li>For floating-point (float, double), <code>xmm0</code>, <code>xmm1</code>, <code>xmm2</code>,
+        <code>xmm3</code>, <code>xmm4</code>, <code>xmm5</code>, <code>xmm6</code>, <code>xmm7</code>.
+  </li></ul>
+</li><li>Additional parameters are pushed on the stack, right to left, and
+are to be <em>removed by the caller</em> after the call.</li>
+<li>After the parameters are pushed, the call instruction is
+made, so when the called function gets control, the return
+address is at <code>[rsp]</code>, the first memory parameter is at
+<code>[rsp+8]</code>, etc.
+</li><li><strong>The stack pointer <code>rsp</code> must be aligned to a 16-byte boundary
+before making a call</strong>.  Fine, but the process of making a call pushes the return address (8 bytes) on
+the stack, so when a function gets control, <code>rsp</code> is not aligned.  You have to make
+that extra space yourself, by pushing something or subtracting 8 from <code>rsp</code>.
+</li><li>The only registers that the called function is required to preserve (the calle-save registers)
+are: <code>rbp</code>, <code>rbx</code>, <code>r12</code>, <code>r13</code>, <code>r14</code>, <code>r15</code>.
+All others are free to be changed by the called function.
+</li><li>The callee is also supposed to save the control bits of the XMCSR and the x87 control word,
+but x87 instructions are rare in 64-bit code so you probably don't have to worry about this.
+</li><li>Integers are returned in <code>rax</code> or <code>rdx:rax</code>, and floating point values are returned
+in <code>xmm0</code> or <code>xmm1:xmm0</code>.
+</li></ul>
+
+<p>Here is a program that illustrates how registers have to be saved and restored:</p>
+
+<div class="filename"><span>fib.asm</span></div><pre class="prettyprint lang-asm"><span class="com"><span class="com">; -----------------------------------------------------------------------------</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; A 64-bit Linux application that writes the first 90 Fibonacci numbers. To</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; assemble and run:</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">;</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; &nbsp; &nbsp; nasm -felf64 fib.asm &amp;&amp; gcc fib.o &amp;&amp; ./a.out</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; -----------------------------------------------------------------------------</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; global &nbsp;main<br>&nbsp; &nbsp; &nbsp; &nbsp; extern &nbsp;printf<br><br>&nbsp; &nbsp; &nbsp; &nbsp; section .text<br>main:<br>&nbsp; &nbsp; &nbsp; &nbsp; push &nbsp; &nbsp;</span></span><span class="kwd"><span class="kwd">rbx</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; we have to save this since we use it</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">ecx</span></span><span class="pln"><span class="pln">, 90 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; ecx will countdown to 0</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; xor &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln">, </span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; rax will hold the current number</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; xor &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rbx</span></span><span class="pln"><span class="pln">, </span></span><span class="kwd"><span class="kwd">rbx</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; rbx will hold the next number</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; inc &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rbx</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; rbx is originally 1</span></span><span class="pln"><span class="pln"><br>print:<br>&nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; We need to call printf, but we are using rax, rbx, and rcx. &nbsp;printf</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; may destroy rax and rcx so we will save these before the call and</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; restore them afterwards.</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; push &nbsp; &nbsp;</span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; caller-save register</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; push &nbsp; &nbsp;</span></span><span class="kwd"><span class="kwd">rcx</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; caller-save register</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln">, format &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; set 1st parameter (format)</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rsi</span></span><span class="pln"><span class="pln">, </span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; set 2nd parameter (current_number)</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; xor &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln">, </span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; because printf is varargs</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; Stack is already aligned because we pushed three 8 byte registers</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; call &nbsp; &nbsp;printf &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; printf(format, current_number)</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; pop &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rcx</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; restore caller-save register</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; pop &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; restore caller-save register</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rdx</span></span><span class="pln"><span class="pln">, </span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; save the current number</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln">, </span></span><span class="kwd"><span class="kwd">rbx</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; next number is now current</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; add &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rbx</span></span><span class="pln"><span class="pln">, </span></span><span class="kwd"><span class="kwd">rdx</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; get the new next number</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; dec &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">ecx</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; count down</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; jnz &nbsp; &nbsp; print &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; if not done counting, do some more</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; pop &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rbx</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; restore rbx before returning</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; ret<br>format:<br>&nbsp; &nbsp; &nbsp; &nbsp; db &nbsp;"%20ld", 10, 0</span></span></pre>
+<pre class="console">$ <kbd>nasm -felf64 fib.asm &amp;&amp; gcc fib.o &amp;&amp; ./a.out</kbd>
+                   0
+                   1
+                   1
+                   2
+                   .
+                   .
+                   .
+  679891637638612258
+ 1100087778366101931
+ 1779979416004714189
+</pre>
+
+<h2>Mixing C and Assembly Language</h2>
+
+<p>This program is just a simple function that takes in three
+integer parameters and returns the maximum value.</p>
+
+<div class="filename"><span>maxofthree.asm</span></div><pre class="prettyprint lang-asm"><span class="com"><span class="com">; -----------------------------------------------------------------------------</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; A 64-bit function that returns the maximum value of its three 64-bit integer</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; arguments. &nbsp;The function has signature:</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">;</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; &nbsp; int64_t maxofthree(int64_t x, int64_t y, int64_t z)</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">;</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; Note that the parameters have already been passed in rdi, rsi, and rdx. &nbsp;We</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; just have to return the value in rax.</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; -----------------------------------------------------------------------------</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; global &nbsp;maxofthree<br>&nbsp; &nbsp; &nbsp; &nbsp; section .text<br>maxofthree:<br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln">, </span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; result (rax) initially holds x</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; cmp &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln">, </span></span><span class="kwd"><span class="kwd">rsi</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; is x less than y?</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; cmovl &nbsp; </span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln">, </span></span><span class="kwd"><span class="kwd">rsi</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; if so, set result to y</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; cmp &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln">, </span></span><span class="kwd"><span class="kwd">rdx</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; is max(x,y) less than z?</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; cmovl &nbsp; </span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln">, </span></span><span class="kwd"><span class="kwd">rdx</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; if so, set result to z</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; ret &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; the max will be in rax</span></span></pre>
+<p>Here is a C program that calls the assembly language function.</p>
+
+<div class="filename"><span>callmaxofthree.c</span></div><pre class="prettyprint"><span class="com"><span class="com">/*<br>&nbsp;* A small program that illustrates how to call the maxofthree function we wrote in<br>&nbsp;* assembly language.<br>&nbsp;*/</span></span><span class="pln"><span class="pln"><br><br></span></span><span class="com"><span class="com">#include</span></span><span class="pln"><span class="pln"> </span></span><span class="str"><span class="str">&lt;stdio.h&gt;</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">#include</span></span><span class="pln"><span class="pln"> </span></span><span class="str"><span class="str">&lt;inttypes.h&gt;</span></span><span class="pln"><span class="pln"><br><br>int64_t maxofthree</span></span><span class="pun"><span class="pun">(</span></span><span class="pln"><span class="pln">int64_t</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> int64_t</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> int64_t</span></span><span class="pun"><span class="pun">);</span></span><span class="pln"><span class="pln"><br><br></span></span><span class="kwd"><span class="kwd">int</span></span><span class="pln"><span class="pln"> main</span></span><span class="pun"><span class="pun">()</span></span><span class="pln"><span class="pln"> </span></span><span class="pun"><span class="pun">{</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; printf</span></span><span class="pun"><span class="pun">(</span></span><span class="str"><span class="str">"%ld\n"</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> maxofthree</span></span><span class="pun"><span class="pun">(</span></span><span class="lit"><span class="lit">1</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> </span></span><span class="pun"><span class="pun">-</span></span><span class="lit"><span class="lit">4</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> </span></span><span class="pun"><span class="pun">-</span></span><span class="lit"><span class="lit">7</span></span><span class="pun"><span class="pun">));</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; printf</span></span><span class="pun"><span class="pun">(</span></span><span class="str"><span class="str">"%ld\n"</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> maxofthree</span></span><span class="pun"><span class="pun">(</span></span><span class="lit"><span class="lit">2</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> </span></span><span class="pun"><span class="pun">-</span></span><span class="lit"><span class="lit">6</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> </span></span><span class="lit"><span class="lit">1</span></span><span class="pun"><span class="pun">));</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; printf</span></span><span class="pun"><span class="pun">(</span></span><span class="str"><span class="str">"%ld\n"</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> maxofthree</span></span><span class="pun"><span class="pun">(</span></span><span class="lit"><span class="lit">2</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> </span></span><span class="lit"><span class="lit">3</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> </span></span><span class="lit"><span class="lit">1</span></span><span class="pun"><span class="pun">));</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; printf</span></span><span class="pun"><span class="pun">(</span></span><span class="str"><span class="str">"%ld\n"</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> maxofthree</span></span><span class="pun"><span class="pun">(-</span></span><span class="lit"><span class="lit">2</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> </span></span><span class="lit"><span class="lit">4</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> </span></span><span class="lit"><span class="lit">3</span></span><span class="pun"><span class="pun">));</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; printf</span></span><span class="pun"><span class="pun">(</span></span><span class="str"><span class="str">"%ld\n"</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> maxofthree</span></span><span class="pun"><span class="pun">(</span></span><span class="lit"><span class="lit">2</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> </span></span><span class="pun"><span class="pun">-</span></span><span class="lit"><span class="lit">6</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> </span></span><span class="lit"><span class="lit">5</span></span><span class="pun"><span class="pun">));</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; printf</span></span><span class="pun"><span class="pun">(</span></span><span class="str"><span class="str">"%ld\n"</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> maxofthree</span></span><span class="pun"><span class="pun">(</span></span><span class="lit"><span class="lit">2</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> </span></span><span class="lit"><span class="lit">4</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> </span></span><span class="lit"><span class="lit">6</span></span><span class="pun"><span class="pun">));</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">return</span></span><span class="pln"><span class="pln"> </span></span><span class="lit"><span class="lit">0</span></span><span class="pun"><span class="pun">;</span></span><span class="pln"><span class="pln"><br></span></span><span class="pun"><span class="pun">}</span></span></pre>
+<pre class="console">$ <kbd>nasm -felf64 maxofthree.asm &amp;&amp; gcc callmaxofthree.c maxofthree.o &amp;&amp; ./a.out</kbd>
+1
+2
+3
+4
+5
+6
+</pre>
+
+<h2>Command Line Arguments</h2>
+
+<p>You know that in C, <code>main</code> is just a plain old function,
+and it has a couple parameters of its own:</p>
+<pre>int main(int argc, char** argv)
+</pre>
+<p>Here is a program that uses this fact to simply echo the commandline
+arguments to a program, one per line:</p>
+
+<div class="filename"><span>echo.asm</span></div><pre class="prettyprint lang-asm"><span class="com"><span class="com">; -----------------------------------------------------------------------------</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; A 64-bit program that displays its command line arguments, one per line.</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">;</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; On entry, rdi will contain argc and rsi will contain argv.</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; -----------------------------------------------------------------------------</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; global &nbsp;main<br>&nbsp; &nbsp; &nbsp; &nbsp; extern &nbsp;puts<br>&nbsp; &nbsp; &nbsp; &nbsp; section .text<br>main:<br>&nbsp; &nbsp; &nbsp; &nbsp; push &nbsp; &nbsp;</span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; save registers that puts uses</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; push &nbsp; &nbsp;</span></span><span class="kwd"><span class="kwd">rsi</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; sub &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rsp</span></span><span class="pln"><span class="pln">, 8 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; must align stack before call</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln">, [</span></span><span class="kwd"><span class="kwd">rsi</span></span><span class="pln"><span class="pln">] &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; the argument string to display</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; call &nbsp; &nbsp;puts &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; print it</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; add &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rsp</span></span><span class="pln"><span class="pln">, 8 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; restore %rsp to pre-aligned value</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; pop &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rsi</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; restore registers puts used</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; pop &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; add &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rsi</span></span><span class="pln"><span class="pln">, 8 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; point to next argument</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; dec &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; count down</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; jnz &nbsp; &nbsp; main &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; if not done counting keep going</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; ret<br></span></span></pre>
+<pre class="console">$ <kbd>nasm -felf64 echo.asm &amp;&amp; gcc echo.o &amp;&amp; ./a.out dog 22 -zzz "hi there"</kbd>
+./a.out
+dog
+22
+-zzz
+hi there
+</pre>
+
+<h2>A Longer Example</h2>
+
+<p>Note that as far as the C Library is concerned, command line
+arguments are always strings.  If you want to treat them as integers,
+call <code>atoi</code>.  Here's a neat program to compute x<sup>y</sup>.</p>
+
+<div class="filename"><span>power.asm</span></div><pre class="prettyprint lang-asm"><span class="com"><span class="com">; -----------------------------------------------------------------------------</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; A 64-bit command line application to compute x^y.</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">;</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; Syntax: power x y</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; x and y are (32-bit) integers</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; -----------------------------------------------------------------------------</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; global &nbsp;main<br>&nbsp; &nbsp; &nbsp; &nbsp; extern &nbsp;printf<br>&nbsp; &nbsp; &nbsp; &nbsp; extern &nbsp;puts<br>&nbsp; &nbsp; &nbsp; &nbsp; extern &nbsp;atoi<br><br>&nbsp; &nbsp; &nbsp; &nbsp; section .text<br>main:<br>&nbsp; &nbsp; &nbsp; &nbsp; push &nbsp; &nbsp;</span></span><span class="kwd"><span class="kwd">r12</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; save callee-save registers</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; push &nbsp; &nbsp;</span></span><span class="kwd"><span class="kwd">r13</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; push &nbsp; &nbsp;</span></span><span class="kwd"><span class="kwd">r14</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; By pushing 3 registers our stack is already aligned for calls</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; cmp &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln">, 3 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; must have exactly two arguments</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; jne &nbsp; &nbsp; error1<br><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">r12</span></span><span class="pln"><span class="pln">, </span></span><span class="kwd"><span class="kwd">rsi</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; argv</span></span><span class="pln"><span class="pln"><br><br></span></span><span class="com"><span class="com">; We will use ecx to count down form the exponent to zero, esi to hold the</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; value of the base, and eax to hold the running product.</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln">, [</span></span><span class="kwd"><span class="kwd">r12</span></span><span class="pln"><span class="pln">+16] &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; argv[2]</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; call &nbsp; &nbsp;atoi &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; y in eax</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; cmp &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">eax</span></span><span class="pln"><span class="pln">, 0 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; disallow negative exponents</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; jl &nbsp; &nbsp; &nbsp;error2<br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; r13d, </span></span><span class="kwd"><span class="kwd">eax</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; y in r13d</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln">, [</span></span><span class="kwd"><span class="kwd">r12</span></span><span class="pln"><span class="pln">+8] &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; argv</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; call &nbsp; &nbsp;atoi &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; x in eax</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; r14d, </span></span><span class="kwd"><span class="kwd">eax</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; x in r14d</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">eax</span></span><span class="pln"><span class="pln">, 1 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; start with answer = 1</span></span><span class="pln"><span class="pln"><br>check:<br>&nbsp; &nbsp; &nbsp; &nbsp; test &nbsp; &nbsp;r13d, r13d &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; we're counting y downto 0</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; jz &nbsp; &nbsp; &nbsp;gotit &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; done</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; imul &nbsp; &nbsp;</span></span><span class="kwd"><span class="kwd">eax</span></span><span class="pln"><span class="pln">, r14d &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; multiply in another x</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; dec &nbsp; &nbsp; r13d<br>&nbsp; &nbsp; &nbsp; &nbsp; jmp &nbsp; &nbsp; check<br>gotit: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; print report on success</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln">, answer<br>&nbsp; &nbsp; &nbsp; &nbsp; movsxd &nbsp;</span></span><span class="kwd"><span class="kwd">rsi</span></span><span class="pln"><span class="pln">, </span></span><span class="kwd"><span class="kwd">eax</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; xor &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln">, </span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; call &nbsp; &nbsp;printf<br>&nbsp; &nbsp; &nbsp; &nbsp; jmp &nbsp; &nbsp; done<br>error1: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; print error message</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">edi</span></span><span class="pln"><span class="pln">, badArgumentCount<br>&nbsp; &nbsp; &nbsp; &nbsp; call &nbsp; &nbsp;puts<br>&nbsp; &nbsp; &nbsp; &nbsp; jmp &nbsp; &nbsp; done<br>error2: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; print error message</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">edi</span></span><span class="pln"><span class="pln">, negativeExponent<br>&nbsp; &nbsp; &nbsp; &nbsp; call &nbsp; &nbsp;puts<br>done: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; restore saved registers</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; pop &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">r14</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; pop &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">r13</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; pop &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">r12</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; ret<br><br>answer:<br>&nbsp; &nbsp; &nbsp; &nbsp; db &nbsp; &nbsp; &nbsp;"%d", 10, 0<br>badArgumentCount:<br>&nbsp; &nbsp; &nbsp; &nbsp; db &nbsp; &nbsp; &nbsp;"Requires exactly two arguments", 10, 0<br>negativeExponent:<br>&nbsp; &nbsp; &nbsp; &nbsp; db &nbsp; &nbsp; &nbsp;"The exponent may not be negative", 10, 0</span></span></pre>
+<pre class="console">$ <kbd>nasm -felf64 power.asm &amp;&amp; gcc -o power power.o</kbd>
+$ <kbd>./power 2 19</kbd>
+524288
+$ <kbd>./power 3 -8</kbd>
+The exponent may not be negative
+$ <kbd>./power 1 500</kbd>
+1
+$ <kbd>./power 1</kbd>
+Requires exactly two arguments
+</pre>
+
+<h2>Floating Point Instructions</h2>
+
+<p>Floating-point arguments go int the xmm registers.  Here is a simple function for summing
+the values in a double array:</p>
+
+<div class="filename"><span>sum.asm</span></div><pre class="prettyprint lang-asm"><span class="com"><span class="com">; -----------------------------------------------------------------------------</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; A 64-bit function that returns the sum of the elements in a floating-point</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; array. The function has prototype:</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">;</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; &nbsp; double sum(double[] array, uint64_t length)</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; -----------------------------------------------------------------------------</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; global &nbsp;sum<br>&nbsp; &nbsp; &nbsp; &nbsp; section .text<br>sum:<br>&nbsp; &nbsp; &nbsp; &nbsp; xorsd &nbsp; </span></span><span class="kwd"><span class="kwd">xmm0</span></span><span class="pln"><span class="pln">, </span></span><span class="kwd"><span class="kwd">xmm0</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; initialize the sum to 0</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; cmp &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rsi</span></span><span class="pln"><span class="pln">, 0 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; special case for length = 0</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; je &nbsp; &nbsp; &nbsp;done<br>next:<br>&nbsp; &nbsp; &nbsp; &nbsp; addsd &nbsp; </span></span><span class="kwd"><span class="kwd">xmm0</span></span><span class="pln"><span class="pln">, [</span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln">] &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; add in the current array element</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; add &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln">, 8 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; move to next array element</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; dec &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rsi</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; count down</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; jnz &nbsp; &nbsp; next &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; if not done counting, continue</span></span><span class="pln"><span class="pln"><br>done:<br>&nbsp; &nbsp; &nbsp; &nbsp; ret &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; return value already in xmm0</span></span></pre>
+<p>A C program that calls it:</p>
+
+<div class="filename"><span>callsum.c</span></div><pre class="prettyprint"><span class="com"><span class="com">/*<br>&nbsp;* Illustrates how to call the sum function we wrote in assembly language.<br>&nbsp;*/</span></span><span class="pln"><span class="pln"><br><br></span></span><span class="com"><span class="com">#include</span></span><span class="pln"><span class="pln"> </span></span><span class="str"><span class="str">&lt;stdio.h&gt;</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">#include</span></span><span class="pln"><span class="pln"> </span></span><span class="str"><span class="str">&lt;inttypes.h&gt;</span></span><span class="pln"><span class="pln"><br><br></span></span><span class="kwd"><span class="kwd">double</span></span><span class="pln"><span class="pln"> sum</span></span><span class="pun"><span class="pun">(</span></span><span class="kwd"><span class="kwd">double</span></span><span class="pun"><span class="pun">[],</span></span><span class="pln"><span class="pln"> uint64_t</span></span><span class="pun"><span class="pun">);</span></span><span class="pln"><span class="pln"><br><br></span></span><span class="kwd"><span class="kwd">int</span></span><span class="pln"><span class="pln"> main</span></span><span class="pun"><span class="pun">()</span></span><span class="pln"><span class="pln"> </span></span><span class="pun"><span class="pun">{</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">double</span></span><span class="pln"><span class="pln"> test</span></span><span class="pun"><span class="pun">[]</span></span><span class="pln"><span class="pln"> </span></span><span class="pun"><span class="pun">=</span></span><span class="pln"><span class="pln"> </span></span><span class="pun"><span class="pun">{</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="lit"><span class="lit">40.5</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> </span></span><span class="lit"><span class="lit">26.7</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> </span></span><span class="lit"><span class="lit">21.9</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> </span></span><span class="lit"><span class="lit">1.5</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> </span></span><span class="pun"><span class="pun">-</span></span><span class="lit"><span class="lit">40.5</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> </span></span><span class="pun"><span class="pun">-</span></span><span class="lit"><span class="lit">23.4</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; </span></span><span class="pun"><span class="pun">};</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; printf</span></span><span class="pun"><span class="pun">(</span></span><span class="str"><span class="str">"%20.7f\n"</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> sum</span></span><span class="pun"><span class="pun">(</span></span><span class="pln"><span class="pln">test</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> </span></span><span class="lit"><span class="lit">6</span></span><span class="pun"><span class="pun">));</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; printf</span></span><span class="pun"><span class="pun">(</span></span><span class="str"><span class="str">"%20.7f\n"</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> sum</span></span><span class="pun"><span class="pun">(</span></span><span class="pln"><span class="pln">test</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> </span></span><span class="lit"><span class="lit">2</span></span><span class="pun"><span class="pun">));</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; printf</span></span><span class="pun"><span class="pun">(</span></span><span class="str"><span class="str">"%20.7f\n"</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> sum</span></span><span class="pun"><span class="pun">(</span></span><span class="pln"><span class="pln">test</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> </span></span><span class="lit"><span class="lit">0</span></span><span class="pun"><span class="pun">));</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; printf</span></span><span class="pun"><span class="pun">(</span></span><span class="str"><span class="str">"%20.7f\n"</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> sum</span></span><span class="pun"><span class="pun">(</span></span><span class="pln"><span class="pln">test</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> </span></span><span class="lit"><span class="lit">3</span></span><span class="pun"><span class="pun">));</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">return</span></span><span class="pln"><span class="pln"> </span></span><span class="lit"><span class="lit">0</span></span><span class="pun"><span class="pun">;</span></span><span class="pln"><span class="pln"><br></span></span><span class="pun"><span class="pun">}</span></span></pre>
+<pre class="console">$ <kbd>nasm -felf64 sum.asm &amp;&amp; gcc sum.o callsum.c &amp;&amp; ./a.out</kbd>
+          26.7000000
+          67.2000000
+           0.0000000
+          89.1000000
+</pre>
+
+<h2>Data Sections</h2>
+
+<p>The text section is read-only on most operating systems, so
+you might find the need for a data section.  On most operating systems,
+the data section is only for initialized data, and you have a special
+.bss section for uninitialized data.  Here is a program that averages
+the command line arguments, expected to be integers, and displays the
+result as a floating point number.</p>
+
+<div class="filename"><span>average.asm</span></div><pre class="prettyprint lang-asm"><span class="com"><span class="com">; -----------------------------------------------------------------------------</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; 64-bit program that treats all its command line arguments as integers and</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; displays their average as a floating point number. &nbsp;This program uses a data</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; section to store intermediate results, not that it has to, but only to</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; illustrate how data sections are used.</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; -----------------------------------------------------------------------------</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; global &nbsp; main<br>&nbsp; &nbsp; &nbsp; &nbsp; extern &nbsp; atoi<br>&nbsp; &nbsp; &nbsp; &nbsp; extern &nbsp; printf<br>&nbsp; &nbsp; &nbsp; &nbsp; default &nbsp;rel<br><br>&nbsp; &nbsp; &nbsp; &nbsp; section &nbsp;.text<br>main:<br>&nbsp; &nbsp; &nbsp; &nbsp; dec &nbsp; &nbsp; &nbsp;</span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; argc-1, since we don't count program name</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; jz &nbsp; &nbsp; &nbsp; nothingToAverage<br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; &nbsp;[count], </span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; save number of real arguments</span></span><span class="pln"><span class="pln"><br>accumulate:<br>&nbsp; &nbsp; &nbsp; &nbsp; push &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; save register across call to atoi</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; push &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rsi</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; &nbsp;</span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln">, [</span></span><span class="kwd"><span class="kwd">rsi</span></span><span class="pln"><span class="pln">+</span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln">*8] &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; argv[rdi]</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; call &nbsp; &nbsp; atoi &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; now rax has the int value of arg</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; pop &nbsp; &nbsp; &nbsp;</span></span><span class="kwd"><span class="kwd">rsi</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; restore registers after atoi call</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; pop &nbsp; &nbsp; &nbsp;</span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; add &nbsp; &nbsp; &nbsp;[sum], </span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; accumulate sum as we go</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; dec &nbsp; &nbsp; &nbsp;</span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; count down</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; jnz &nbsp; &nbsp; &nbsp;accumulate &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; more arguments?</span></span><span class="pln"><span class="pln"><br>average:<br>&nbsp; &nbsp; &nbsp; &nbsp; cvtsi2sd </span></span><span class="kwd"><span class="kwd">xmm0</span></span><span class="pln"><span class="pln">, [sum]<br>&nbsp; &nbsp; &nbsp; &nbsp; cvtsi2sd </span></span><span class="kwd"><span class="kwd">xmm1</span></span><span class="pln"><span class="pln">, [count]<br>&nbsp; &nbsp; &nbsp; &nbsp; divsd &nbsp; &nbsp;</span></span><span class="kwd"><span class="kwd">xmm0</span></span><span class="pln"><span class="pln">, </span></span><span class="kwd"><span class="kwd">xmm1</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; xmm0 is sum/count</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; &nbsp;</span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln">, format &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; 1st arg to printf</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; &nbsp;</span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln">, 1 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; printf is varargs, there is 1 non-int argument</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; sub &nbsp; &nbsp; &nbsp;</span></span><span class="kwd"><span class="kwd">rsp</span></span><span class="pln"><span class="pln">, 8 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; align stack pointer</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; call &nbsp; &nbsp; printf &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; printf(format, sum/count)</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; add &nbsp; &nbsp; &nbsp;</span></span><span class="kwd"><span class="kwd">rsp</span></span><span class="pln"><span class="pln">, 8 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; restore stack pointer</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; ret<br><br>nothingToAverage:<br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; &nbsp;</span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln">, error<br>&nbsp; &nbsp; &nbsp; &nbsp; xor &nbsp; &nbsp; &nbsp;</span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln">, </span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; call &nbsp; &nbsp; printf<br>&nbsp; &nbsp; &nbsp; &nbsp; ret<br><br>&nbsp; &nbsp; &nbsp; &nbsp; section &nbsp;.data<br>count: &nbsp;dq &nbsp; &nbsp; &nbsp; 0<br>sum: &nbsp; &nbsp;dq &nbsp; &nbsp; &nbsp; 0<br>format: db &nbsp; &nbsp; &nbsp; "%g", 10, 0<br>error: &nbsp;db &nbsp; &nbsp; &nbsp; "There are no command line arguments to average", 10, 0<br></span></span></pre>
+<pre class="console">$ <kbd>nasm -felf64 average.asm &amp;&amp; gcc average.o &amp;&amp; ./a.out 19 8 21 -33</kbd>
+3.75
+$ <kbd>nasm -felf64 average.asm &amp;&amp; gcc average.o &amp;&amp; ./a.out</kbd>
+There are no command line arguments to average
+</pre>
+
+<h2>Recursion</h2>
+
+<p>Perhaps surprisingly, there's nothing out of the ordinary required
+to implement recursive functions.  You just have to be careful to save
+registers, as usual.</p>
+
+<div class="filename"><span>factorial.asm</span></div><pre class="prettyprint lang-asm"><span class="com"><span class="com">; ----------------------------------------------------------------------------</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; An implementation of the recursive function:</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">;</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; &nbsp; uint64_t factorial(uint64_t n) {</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; &nbsp; &nbsp; &nbsp; return (n &lt;= 1) ? 1 : n * factorial(n-1);</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; &nbsp; }</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">; ----------------------------------------------------------------------------</span></span><span class="pln"><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; global &nbsp;factorial<br><br>&nbsp; &nbsp; &nbsp; &nbsp; section .text<br>factorial:<br>&nbsp; &nbsp; &nbsp; &nbsp; cmp &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln">, 1 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; n &lt;= 1?</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; jnbe &nbsp; &nbsp;L1 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; if not, go do a recursive call</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln">, 1 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; otherwise return 1</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; ret<br>L1:<br>&nbsp; &nbsp; &nbsp; &nbsp; push &nbsp; &nbsp;</span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; save n on stack (also aligns %rsp!)</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; dec &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; n-1</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; call &nbsp; &nbsp;factorial &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; factorial(n-1), result goes in %rax</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; pop &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="com"><span class="com">; restore n</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; imul &nbsp; &nbsp;</span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln">, </span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span></span><span class="com"><span class="com">; n * factorial(n-1), stored in %rax</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; ret</span></span></pre>
+<p>An example caller:</p>
+
+<div class="filename"><span>callfactorial.c</span></div><pre class="prettyprint"><span class="com"><span class="com">/*<br>&nbsp;* An application that illustrates calling the factorial function defined elsewhere.<br>&nbsp;*/</span></span><span class="pln"><span class="pln"><br><br></span></span><span class="com"><span class="com">#include</span></span><span class="pln"><span class="pln"> </span></span><span class="str"><span class="str">&lt;stdio.h&gt;</span></span><span class="pln"><span class="pln"><br></span></span><span class="com"><span class="com">#include</span></span><span class="pln"><span class="pln"> </span></span><span class="str"><span class="str">&lt;inttypes.h&gt;</span></span><span class="pln"><span class="pln"><br><br>uint64_t factorial</span></span><span class="pun"><span class="pun">(</span></span><span class="pln"><span class="pln">uint64_t n</span></span><span class="pun"><span class="pun">);</span></span><span class="pln"><span class="pln"><br><br></span></span><span class="kwd"><span class="kwd">int</span></span><span class="pln"><span class="pln"> main</span></span><span class="pun"><span class="pun">()</span></span><span class="pln"><span class="pln"> </span></span><span class="pun"><span class="pun">{</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">for</span></span><span class="pln"><span class="pln"> </span></span><span class="pun"><span class="pun">(</span></span><span class="pln"><span class="pln">uint64_t i </span></span><span class="pun"><span class="pun">=</span></span><span class="pln"><span class="pln"> </span></span><span class="lit"><span class="lit">0</span></span><span class="pun"><span class="pun">;</span></span><span class="pln"><span class="pln"> i </span></span><span class="pun"><span class="pun">&lt;</span></span><span class="pln"><span class="pln"> </span></span><span class="lit"><span class="lit">20</span></span><span class="pun"><span class="pun">;</span></span><span class="pln"><span class="pln"> i</span></span><span class="pun"><span class="pun">++)</span></span><span class="pln"><span class="pln"> </span></span><span class="pun"><span class="pun">{</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; printf</span></span><span class="pun"><span class="pun">(</span></span><span class="str"><span class="str">"factorial(%2lu) = %lu\n"</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> i</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> factorial</span></span><span class="pun"><span class="pun">(</span></span><span class="pln"><span class="pln">i</span></span><span class="pun"><span class="pun">));</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; </span></span><span class="pun"><span class="pun">}</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">return</span></span><span class="pln"><span class="pln"> </span></span><span class="lit"><span class="lit">0</span></span><span class="pun"><span class="pun">;</span></span><span class="pln"><span class="pln"><br></span></span><span class="pun"><span class="pun">}</span></span></pre>
+<pre class="console">$ <kbd>nasm -felf64 factorial.asm &amp;&amp; gcc -std=c99 factorial.o callfactorial.c &amp;&amp; ./a.out</kbd>
+factorial( 0) = 1
+factorial( 1) = 1
+factorial( 2) = 2
+factorial( 3) = 6
+factorial( 4) = 24
+factorial( 5) = 120
+factorial( 6) = 720
+factorial( 7) = 5040
+factorial( 8) = 40320
+factorial( 9) = 362880
+factorial(10) = 3628800
+factorial(11) = 39916800
+factorial(12) = 479001600
+factorial(13) = 6227020800
+factorial(14) = 87178291200
+factorial(15) = 1307674368000
+factorial(16) = 20922789888000
+factorial(17) = 355687428096000
+factorial(18) = 6402373705728000
+factorial(19) = 121645100408832000
+</pre>
+
+<h2>SIMD Parallelism</h2>
+
+<p>The XMM registers can do arithmetic on floating point values one opeation at a time
+or multiple operations at a time.  The operations have the form:</p>
+<pre>operation  xmmregister_or_memorylocation, xmmregister
+</pre>
+<p>For floating point addition, the instructions are:</p>
+<pre>addpd — do 2 double-precision additions
+addps — do just one double-precision addition, using the low 64-bits of the register
+addsd — do 4 single-precision additions
+addss — do just one single-precision addition, using the low 32-bits of the register
+</pre>
+
+<p>TODO - show a function that processes an array of floats, 4 at a time.</p>
+
+<h2>Saturated Arithmetic</h2>
+
+<p>The XMM registers can also do arithmetic on integers. The instructions have the form:</p>
+<pre>operation  xmmregister_or_memorylocation, xmmregister
+</pre>
+<p>For integer addition, the instructions are:</p>
+<pre>paddb — do 16 byte additions
+paddw — do 8 word additions
+paddd — do 4 dword additions
+paddq — do 2 qword additions
+paddsb — do 16 byte additions with signed saturation (80..7F)
+paddsw — do 8 word additions with unsigned saturation (8000..7FFF)
+paddusb — do 16 byte additions with unsigned saturation (00..FF)
+paddusw — do 8 word additions with unsigned saturation (00..FFFF)
+</pre>
+
+<p>TODO - SHOW AN EXAMPLE</p>
+
+<h2>Graphics</h2>
+
+<!--
+<p>You probably the OpenGL graphics library already on your system, so
+why not call it from an assembly language program:</p>
+
+<div class='filename'><span>triangle.asm</span></div><pre class='prettyprint lang-asm'>; ----------------------------------------------------------------------------
+; triangle.asm
+;
+; A very simple *Windows* OpenGL application using the GLUT library.  It
+; draws a nicely colored triangle in a top-level application window.  One
+; interesting thing is that the Windows GL and GLUT functions do NOT use the
+; C calling convention; instead they use the "stdcall" convention which is
+; like C except that the callee pops the parameters.
+; ----------------------------------------------------------------------------
+
+	global	_main
+	extern	_glClear@4
+	extern	_glBegin@4
+	extern	_glEnd@0
+	extern	_glColor3f@12
+	extern	_glVertex3f@12
+	extern	_glFlush@0
+	extern	_glutInit@8
+	extern	_glutInitDisplayMode@4
+	extern	_glutInitWindowPosition@8
+	extern	_glutInitWindowSize@8
+	extern	_glutCreateWindow@4
+	extern	_glutDisplayFunc@4
+	extern	_glutMainLoop@0
+
+	section	.text
+title:	db	'A Simple Triangle', 0
+zero:	dd	0.0
+one:	dd	1.0
+half:	dd	0.5
+neghalf:dd	-0.5
+
+display:
+	push	dword 16384
+	call	_glClear@4		; glClear(GL_COLOR_BUFFER_BIT)
+	push	dword 9
+	call	_glBegin@4		; glBegin(GL_POLYGON)
+	push	dword 0
+	push	dword 0
+	push	dword [one]
+	call	_glColor3f@12		; glColor3f(1, 0, 0)
+	push	dword 0
+	push	dword [neghalf]
+	push	dword [neghalf]
+	call	_glVertex3f@12		; glVertex(-.5, -.5, 0)
+	push	dword 0
+	push    dword [one]
+	push	dword 0
+	call	_glColor3f@12		; glColor3f(0, 1, 0)
+	push	dword 0
+	push	dword [neghalf]
+	push	dword [half]
+	call	_glVertex3f@12		; glVertex(.5, -.5, 0)
+	push	dword [one]
+	push	dword 0
+	push	dword 0
+	call	_glColor3f@12		; glColor3f(0, 0, 1)
+	push	dword 0
+	push	dword [half]
+	push	dword 0
+	call	_glVertex3f@12		; glVertex(0, .5, 0)
+	call	_glEnd@0		; glEnd()
+	call	_glFlush@0		; glFlush()
+	ret
+
+_main:
+	push	dword [esp+8]		; push argv
+	lea	eax, [esp+8]		; get addr of argc (offset changed :-)
+	push	eax
+	call	_glutInit@8		; glutInit(&amp;argc, argv)
+	push	dword 0
+	call	_glutInitDisplayMode@4
+	push	dword 80
+	push	dword 80
+	call	_glutInitWindowPosition@8
+	push	dword 300
+	push	dword 400
+	call	_glutInitWindowSize@8
+	push	title
+	call	_glutCreateWindow@4
+	push	display
+	call	_glutDisplayFunc@4
+	call	_glutMainLoop@0
+	ret
+</pre> -->
+
+ <p>TODO</p>
+
+<h2>Local Variables and Stack Frames</h2>
+
+<p>First, please read <a href="http://eli.thegreenplace.net/2011/09/06/stack-frame-layout-on-x86-64/">Eli
+Bendersky's article</a>  That overview is more complete than my brief notes.
+
+</p><p>When a function is called the caller will first put the parameters in the correct
+registers then issue the <code>call</code> instruction.  Additional parameters beyond those
+covered by the registers will be pushed on the stack prior to the call.  The call instruction puts
+the return address on the top of stack.  So if you have the function</p>
+
+<pre class="prettyprint"><span class="pln"><span class="pln">int64_t example</span></span><span class="pun"><span class="pun">(</span></span><span class="pln"><span class="pln">int64_t x</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> int64_t y</span></span><span class="pun"><span class="pun">)</span></span><span class="pln"><span class="pln"> </span></span><span class="pun"><span class="pun">{</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; int64_t a</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> b</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> c</span></span><span class="pun"><span class="pun">;</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; b </span></span><span class="pun"><span class="pun">=</span></span><span class="pln"><span class="pln"> </span></span><span class="lit"><span class="lit">7</span></span><span class="pun"><span class="pun">;</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">return</span></span><span class="pln"><span class="pln"> x </span></span><span class="pun"><span class="pun">*</span></span><span class="pln"><span class="pln"> b </span></span><span class="pun"><span class="pun">+</span></span><span class="pln"><span class="pln"> y</span></span><span class="pun"><span class="pun">;</span></span><span class="pln"><span class="pln"><br></span></span><span class="pun"><span class="pun">}</span></span></pre>
+
+<p>Then on entry to the function, x will be in edi, y will be in esi, and the return
+address will be on the top of the stack.  Where can we put the local variables?  An easy choice
+is on the stack itself, though if you have enough regsters, use those.</p>
+
+<p>If you are running on a machine that respect the standard ABI, you can leave rsp where it
+is and access the "extra parameters" and the local variables directly from rsp for example:</p>
+
+<pre>                +----------+
+         rsp-24 |    a     |
+                +----------+
+         rsp-16 |    b     |
+                +----------+
+         rsp-8  |    c     |
+                +----------+
+         rsp    | retaddr  |
+                +----------+
+         rsp+8  | caller's |
+                | stack    |
+                | frame    |
+                | ...      |
+                +----------+
+</pre>
+
+<p>So our function looks like this:</p>
+<pre class="prettyprint lang-asm"><span class="pln"><span class="pln">&nbsp; &nbsp; &nbsp; &nbsp; global &nbsp;example<br>&nbsp; &nbsp; &nbsp; &nbsp; section .text<br>example:<br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; qword [</span></span><span class="kwd"><span class="kwd">rsp</span></span><span class="pln"><span class="pln">-16], 7<br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln">, </span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; imul &nbsp; &nbsp;</span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln">, [</span></span><span class="kwd"><span class="kwd">rsp</span></span><span class="pln"><span class="pln">+8]<br>&nbsp; &nbsp; &nbsp; &nbsp; add &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln">, </span></span><span class="kwd"><span class="kwd">rsi</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; ret</span></span></pre>
+
+<p>If our function were to make another call, you would have to adjust rsp to get out of the way
+at that time.</p>
+
+<p>On Windows you can't use this scheme because if an interrupt were to occur, everything
+above the stack pointer gets plastered.  This doesn't happen on most other operating systems
+because there is a "red zone" of 128 bytes past the stack pointer which is safe from these
+things.  In this case, you can make room on the stack immediately:</p>
+
+<pre class="prettyprint lang-gas"><span class="pln"><span class="pln">example</span></span><span class="pun"><span class="pun">:</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">sub</span></span><span class="pln"><span class="pln"> rsp</span></span><span class="pun"><span class="pun">,</span></span><span class="pln"><span class="pln"> </span></span><span class="lit"><span class="lit">24</span></span></pre>
+
+<p>so our stack looks like this:</p>
+
+<pre>                +----------+
+         rsp    |    a     |
+                +----------+
+         rsp+8  |    b     |
+                +----------+
+         rsp+16 |    c     |
+                +----------+
+         rsp+24 | retaddr  |
+                +----------+
+         rsp+32 | caller's |
+                | stack    |
+                | frame    |
+                | ...      |
+                +----------+
+</pre>
+
+<p>Here's the function now.  Note that we have to remember to replace the stack pointer before
+returning!</p>
+
+<pre class="prettyprint lang-asm"><span class="pln"><span class="pln">&nbsp; &nbsp; &nbsp; &nbsp; global &nbsp;example<br>&nbsp; &nbsp; &nbsp; &nbsp; section .text<br>example:<br>&nbsp; &nbsp; &nbsp; &nbsp; sub &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rsp</span></span><span class="pln"><span class="pln">, 24<br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; qword [</span></span><span class="kwd"><span class="kwd">rsp</span></span><span class="pln"><span class="pln">+8], 7<br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln">, </span></span><span class="kwd"><span class="kwd">rdi</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; imul &nbsp; &nbsp;</span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln">, [</span></span><span class="kwd"><span class="kwd">rsp</span></span><span class="pln"><span class="pln">+8]<br>&nbsp; &nbsp; &nbsp; &nbsp; add &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rax</span></span><span class="pln"><span class="pln">, </span></span><span class="kwd"><span class="kwd">rsi</span></span><span class="pln"><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; add &nbsp; &nbsp; </span></span><span class="kwd"><span class="kwd">rsp</span></span><span class="pln"><span class="pln">, 24<br>&nbsp; &nbsp; &nbsp; &nbsp; ret</span></span></pre>
+
+<h2>Using NASM on OS X</h2>
+
+<p>TODO</p>
+
+<h2>Using NASM on Windows</h2>
+
+<p>TODO</p>
+
+
+<script src="./NASM Examples_files/lang-asm.js"></script>
+</div>
+</div>
+<script>title = document.getElementsByTagName("h1")[0]; if (title) document.title = title.innerHTML;</script>
+
+
+</body></html>

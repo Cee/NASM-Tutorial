@@ -11,66 +11,50 @@
 <script type="text/javascript">onload = prettyPrint;</script>
 <div class="container">
 <div class="innercontent">
-<h1>NASM Examples</h1>
+<h1>NASM 示例</h1>
 
-<div class="abstract">NASM is a pretty awesome assembler.  Let's learn some NASM programming by example.
-These notes barely scratch the surface of what you can do, so after you've gone through this page,
-you'll need to hit the <a href="http://www.nasm.us/doc/">official NASM documentation</a>.</div>
+<div class="abstract">NASM是一个绝赞的汇编器。现在让我们通过一些例子来学习NASM。
+然而这里的笔记仅仅只是蜻蜓点水般地涉及了一些皮毛，所以当你看完这个页面后，
+你需要查看<a href="http://www.nasm.us/doc/">官方的NASM文档</a>。</div>
 
-<h2>Preliminaries</h2>
+<h2>准备工作</h2>
 
-<p>Please note: all of these examples, except for those in the last few sections, will <strong>only run on a
-modern 64-bit Linux installation</strong>.</p>
+<p>请注意：除了最后的几个部分，这里列举的所有例子需要运行在<strong>一个64位的Linux系统上</strong>。</p>
 
-<p>Make sure both nasm and gcc are installed.</p>
+<p>请确保已经安装好nasm和gcc。</p>
 
-<h2>Getting Started</h2>
+<h2>入门</h2>
 
-<p>Our first program will use Linux system call 1 to write a message and Linux system call 60 to
-exit.</p>
+<p>我们的第一个程序将使用1号系统调用来输出一条信息并且使用60号系统调用来退出程序。</p>
 
-<div class="filename"><span>hello.asm</span></div><pre class="prettyprint lang-asm"><span class="com">; ----------------------------------------------------------------------------------------</span><span class="pln"><br></span><span class="com">; Writes "Hello, World" to the console using only system calls. Runs on 64-bit Linux only.</span><span class="pln"><br></span><span class="com">; To assemble and run:</span><span class="pln"><br></span><span class="com">;</span><span class="pln"><br></span><span class="com">; &nbsp; &nbsp; nasm -felf64 hello.asm &amp;&amp; ld hello.o &amp;&amp; ./a.out</span><span class="pln"><br></span><span class="com">; ----------------------------------------------------------------------------------------</span><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; global &nbsp;_start<br><br>&nbsp; &nbsp; &nbsp; &nbsp; section .text<br>_start:<br>&nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">; write(1, message, 13)</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span><span class="kwd">rax</span><span class="pln">, 1 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span><span class="com">; system call 1 is write</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span><span class="kwd">rdi</span><span class="pln">, 1 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span><span class="com">; file handle 1 is stdout</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span><span class="kwd">rsi</span><span class="pln">, message &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span><span class="com">; address of string to output</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span><span class="kwd">rdx</span><span class="pln">, 13 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">; number of bytes</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; syscall &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">; invoke operating system to do the write</span><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">; exit(0)</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span><span class="kwd">eax</span><span class="pln">, 60 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">; system call 60 is exit</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; xor &nbsp; &nbsp; </span><span class="kwd">rdi</span><span class="pln">, </span><span class="kwd">rdi</span><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span><span class="com">; exit code 0</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; syscall &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">; invoke operating system to exit</span><span class="pln"><br>message:<br>&nbsp; &nbsp; &nbsp; &nbsp; db &nbsp; &nbsp; &nbsp;"Hello, World", 10 &nbsp; &nbsp; &nbsp;</span><span class="com">; note the newline at the end</span></pre>
+<div class="filename"><span>hello.asm</span></div><pre class="prettyprint lang-asm"><span class="com">; ----------------------------------------------------------------------------------------</span><span class="pln"><br></span><span class="com">; 仅使用系统调用来输出"Hello, World"到控制台。这个程序仅在64位的Linux下运行。</span><span class="pln"><br></span><span class="com">; 如何编译执行:</span><span class="pln"><br></span><span class="com">;</span><span class="pln"><br></span><span class="com">; &nbsp; &nbsp; nasm -felf64 hello.asm &amp;&amp; ld hello.o &amp;&amp; ./a.out</span><span class="pln"><br></span><span class="com">; ----------------------------------------------------------------------------------------</span><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; global &nbsp;_start<br><br>&nbsp; &nbsp; &nbsp; &nbsp; section .text<br>_start:<br>&nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">; write(1, message, 13)</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span><span class="kwd">rax</span><span class="pln">, 1 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span><span class="com">; system call 1 is write</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span><span class="kwd">rdi</span><span class="pln">, 1 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span><span class="com">; file handle 1 is stdout</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span><span class="kwd">rsi</span><span class="pln">, message &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span><span class="com">; address of string to output</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span><span class="kwd">rdx</span><span class="pln">, 13 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">; number of bytes</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; syscall &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">; invoke operating system to do the write</span><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">; exit(0)</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span><span class="kwd">eax</span><span class="pln">, 60 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">; system call 60 is exit</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; xor &nbsp; &nbsp; </span><span class="kwd">rdi</span><span class="pln">, </span><span class="kwd">rdi</span><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span><span class="com">; exit code 0</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; syscall &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">; invoke operating system to exit</span><span class="pln"><br>message:<br>&nbsp; &nbsp; &nbsp; &nbsp; db &nbsp; &nbsp; &nbsp;"Hello, World", 10 &nbsp; &nbsp; &nbsp;</span><span class="com">; note the newline at the end</span></pre>
 <pre class="console">$ <kbd>nasm -felf64 hello.asm &amp;&amp; ld hello.o &amp;&amp; ./a.out</kbd>
 Hello, World
 </pre>
 
-<h2>Using a C Library</h2>
+<h2>调用一个C语言库</h2>
 
-<p>Remember how in C execution seems to start with "main"?  That's because the C library actually has
-the <code>_start</code> label inside itself!  The code at <code>_start</code> does some initialization,
-then it calls <code>main</code>, then it does some clean up, then it issues system call 60.  So you
-just have to implement <code>main</code>.  We can do that in assembly:
+<p>了解C程序为何看上去总是从"main"函数开始执行吗？实际上，因为在C语言库的内部有一个 <code>_start</code> 标签!在 <code>_start</code> 处的代码会做一些初始化的工作，再调用 <code>main</code> 函数，然后程序最后会做一些清理工作，最终执行60号系统系统调用。因此，你只需要实现 <code>main</code> 函数。我们在汇编中可以这么做：
 
 </p><div class="filename"><span>hola.asm</span></div><pre class="prettyprint lang-asm"><span class="com">; ----------------------------------------------------------------------------------------</span><span class="pln"><br></span><span class="com">; Writes "Hola, mundo" to the console using a C library. Runs on Linux or any other system</span><span class="pln"><br></span><span class="com">; that does not use underscores for symbols in its C library. To assemble and run:</span><span class="pln"><br></span><span class="com">;</span><span class="pln"><br></span><span class="com">; &nbsp; &nbsp; nasm -felf64 hola.asm &amp;&amp; gcc hola.o &amp;&amp; ./a.out</span><span class="pln"><br></span><span class="com">; ----------------------------------------------------------------------------------------</span><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; global &nbsp;main<br>&nbsp; &nbsp; &nbsp; &nbsp; extern &nbsp;puts<br><br>&nbsp; &nbsp; &nbsp; &nbsp; section .text<br>main: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">; This is called by the C library startup code</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span><span class="kwd">rdi</span><span class="pln">, message &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span><span class="com">; First integer (or pointer) argument in rdi</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; call &nbsp; &nbsp;puts &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span><span class="com">; puts(message)</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; ret &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">; Return from main back into C library wrapper</span><span class="pln"><br>message:<br>&nbsp; &nbsp; &nbsp; &nbsp; db &nbsp; &nbsp; &nbsp;"Hola, mundo", 0 &nbsp; &nbsp; &nbsp; &nbsp;</span><span class="com">; Note strings must be terminated with 0 in C</span></pre>
 <pre class="console">$ <kbd>nasm -felf64 hola.asm &amp;&amp; gcc hola.o &amp;&amp; ./a.out</kbd>
 Hola, mundo
 </pre>
 
-<h2>Understanding Calling Conventions</h2>
+<h2>了解调用约束</h2>
 
-<p>When writing code for 64-bit Linux that integrates with a C library, you must follow the
-calling conventions, explained fully in the
-<a href="http://www.x86-64.org/documentation/abi.pdf">AMD64 ABI Reference</a>.
-You can also get this information from
-<a href="http://en.wikipedia.org/wiki/X86_calling_conventions#x86-64_Calling_Conventions">Wikipedia</a>.
-The most important points are:</p>
+<p>当你为64位Linux写一个集成了C语言库的程序时，你必须遵循以下的调用约束条件，详情可以参考<a href="http://www.x86-64.org/documentation/abi.pdf">AMD64 ABI Reference</a>。你也可以从<a href="http://en.wikipedia.org/wiki/X86_calling_conventions#x86-64_Calling_Conventions">Wikipedia</a>得到这些信息。在这里列出最重要的几点：</p>
 <ul class="spaced">
-<li>From left to right, pass as many parameters as will fit in registers.  The order in which
-registers are allocated, are:
+<li>传递参数时，按照从左到右的顺序，参数将依次保存在寄存器中。存放位置的寄存器顺序是确定的：
   <ul class="compressed">
-    <li>For integers and pointers, <code>rdi</code>, <code>rsi</code>, <code>rdx</code>,
-        <code>rcx</code>, <code>r8</code>, <code>r9</code>.
-    </li><li>For floating-point (float, double), <code>xmm0</code>, <code>xmm1</code>, <code>xmm2</code>,
-        <code>xmm3</code>, <code>xmm4</code>, <code>xmm5</code>, <code>xmm6</code>, <code>xmm7</code>.
+    <li>对于整数和指针，<code>rdi</code>，<code>rsi</code>，<code>rdx</code>，
+        <code>rcx</code>，<code>r8</code>，<code>r9</code>。
+    </li><li>对于浮点数（float和double类型），<code>xmm0</code>，<code>xmm1</code>，<code>xmm2</code>，
+        <code>xmm3</code>，<code>xmm4</code>，<code>xmm5</code>，<code>xmm6</code>，<code>xmm7</code>。
   </li></ul>
-</li><li>Additional parameters are pushed on the stack, right to left, and
-are to be <em>removed by the caller</em> after the call.</li>
-<li>After the parameters are pushed, the call instruction is
-made, so when the called function gets control, the return
-address is at <code>[rsp]</code>, the first memory parameter is at
-<code>[rsp+8]</code>, etc.
-</li><li><strong>The stack pointer <code>rsp</code> must be aligned to a 16-byte boundary
-before making a call</strong>.  Fine, but the process of making a call pushes the return address (8 bytes) on
+</li><li>剩下的参数将按照从有道做的顺序压入栈中，并在调用之后<em>由被调用函数推出栈</em>。</li>
+<li>等所有的参数传入后，会生成调用指令。所以当被调用函数得到控制权后，返回地址会被保存在<code>[rsp]</code>中，第一个局部变量会被保存在<code>[rsp+8]</code>中，以此类推。
+</li><li><strong>栈指针<code>rsp</code>在调用前必须进行16字节对齐</strong>。  Fine, but the process of making a call pushes the return address (8 bytes) on
 the stack, so when a function gets control, <code>rsp</code> is not aligned.  You have to make
 that extra space yourself, by pushing something or subtracting 8 from <code>rsp</code>.
 </li><li>The only registers that the called function is required to preserve (the calle-save registers)
@@ -217,27 +201,26 @@ factorial(18) = 6402373705728000
 factorial(19) = 121645100408832000
 </pre>
 
-<h2>SIMD Parallelism</h2>
+<h2>SIMD并行</h2>
 
-<p>The XMM registers can do arithmetic on floating point values one opeation at a time
-or multiple operations at a time.  The operations have the form:</p>
+<p>XMM寄存器一次可以对浮点数进行单个或多个操作。操作形式如下：</p>
 <pre>operation  xmmregister_or_memorylocation, xmmregister
 </pre>
-<p>For floating point addition, the instructions are:</p>
+<p>对于浮点数加法，指令如下：:</p>
 <pre>addpd — do 2 double-precision additions
 addps — do just one double-precision addition, using the low 64-bits of the register
 addsd — do 4 single-precision additions
 addss — do just one single-precision addition, using the low 32-bits of the register
 </pre>
 
-<p>TODO - show a function that processes an array of floats, 4 at a time.</p>
+<p>TODO - 举一个能一次处理数组中4个浮点数的函数的例子</p>
 
-<h2>Saturated Arithmetic</h2>
+<h2>饱和运算</h2>
 
-<p>The XMM registers can also do arithmetic on integers. The instructions have the form:</p>
+<p>XMM寄存器也可以进行整数运算。指令有如下形式：</p>
 <pre>operation  xmmregister_or_memorylocation, xmmregister
 </pre>
-<p>For integer addition, the instructions are:</p>
+<p>对于整数加法，指令如下：</p>
 <pre>paddb — do 16 byte additions
 paddw — do 8 word additions
 paddd — do 4 dword additions
@@ -248,9 +231,9 @@ paddusb — do 16 byte additions with unsigned saturation (00..FF)
 paddusw — do 8 word additions with unsigned saturation (00..FFFF)
 </pre>
 
-<p>TODO - SHOW AN EXAMPLE</p>
+<p>TODO - 举一个例子</p>
 
-<h2>Graphics</h2>
+<h2>绘图</h2>
 
 <!--
 <p>You probably the OpenGL graphics library already on your system, so
@@ -344,24 +327,16 @@ _main:
 
  <p>TODO</p>
 
-<h2>Local Variables and Stack Frames</h2>
+<h2>局部变量与栈帧</h2>
 
-<p>First, please read <a href="http://eli.thegreenplace.net/2011/09/06/stack-frame-layout-on-x86-64/">Eli
-Bendersky's article</a>  That overview is more complete than my brief notes.
-
-</p><p>When a function is called the caller will first put the parameters in the correct
-registers then issue the <code>call</code> instruction.  Additional parameters beyond those
-covered by the registers will be pushed on the stack prior to the call.  The call instruction puts
-the return address on the top of stack.  So if you have the function</p>
+<p>首先，请阅读Eli Bendersky的<a href="http://eli.thegreenplace.net/2011/09/06/stack-frame-layout-on-x86-64/">这篇文章</a>，会比这些摘要更加完整。
+</p><p>当一个函数被调用者调用时，调用者会先把参数存入正确的寄存器中，然后再执行<code>call</code>指令。无法放入寄存器中的参数将会在调用前被推入栈中。所调用的指令会把返回地址存入栈顶。所以如果有以下的函数：</p>
 
 <pre class="prettyprint"><span class="pln">int64_t example</span><span class="pun">(</span><span class="pln">int64_t x</span><span class="pun">,</span><span class="pln"> int64_t y</span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; int64_t a</span><span class="pun">,</span><span class="pln"> b</span><span class="pun">,</span><span class="pln"> c</span><span class="pun">;</span><span class="pln"><br>&nbsp; &nbsp; b </span><span class="pun">=</span><span class="pln"> </span><span class="lit">7</span><span class="pun">;</span><span class="pln"><br>&nbsp; &nbsp; </span><span class="kwd">return</span><span class="pln"> x </span><span class="pun">*</span><span class="pln"> b </span><span class="pun">+</span><span class="pln"> y</span><span class="pun">;</span><span class="pln"><br></span><span class="pun">}</span></pre>
 
-<p>Then on entry to the function, x will be in edi, y will be in esi, and the return
-address will be on the top of the stack.  Where can we put the local variables?  An easy choice
-is on the stack itself, though if you have enough regsters, use those.</p>
+<p>在函数的入口，x和y会被分别存在edi和esi中，返回地址将会被存在栈顶。局部变量会被存到哪里？无论是否有足够的寄存器，一种简单的选择就是存入函数自己的栈中。</p>
 
-<p>If you are running on a machine that respect the standard ABI, you can leave rsp where it
-is and access the "extra parameters" and the local variables directly from rsp for example:</p>
+<p>如果程序运行在一个实现了ABI标准的机器上，你可以在rsp保持不变的情况下获取无法在寄存器中保存的参数值和局部变量值，例如：</p>
 
 <pre>                +----------+
          rsp-24 |    a     |
@@ -379,20 +354,16 @@ is and access the "extra parameters" and the local variables directly from rsp f
                 +----------+
 </pre>
 
-<p>So our function looks like this:</p>
+<p>我们的函数看上去是这个样子的：</p>
 <pre class="prettyprint lang-asm"><span class="pln">&nbsp; &nbsp; &nbsp; &nbsp; global &nbsp;example<br>&nbsp; &nbsp; &nbsp; &nbsp; section .text<br>example:<br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; qword [</span><span class="kwd">rsp</span><span class="pln">-16], 7<br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span><span class="kwd">rax</span><span class="pln">, </span><span class="kwd">rdi</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; imul &nbsp; &nbsp;</span><span class="kwd">rax</span><span class="pln">, [</span><span class="kwd">rsp</span><span class="pln">+8]<br>&nbsp; &nbsp; &nbsp; &nbsp; add &nbsp; &nbsp; </span><span class="kwd">rax</span><span class="pln">, </span><span class="kwd">rsi</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; ret</span></pre>
 
-<p>If our function were to make another call, you would have to adjust rsp to get out of the way
-at that time.</p>
+<p>如果被调用的函数需要调用其他函数，你就需要调整rsp的值来得到正确的返回地址。</p>
 
-<p>On Windows you can't use this scheme because if an interrupt were to occur, everything
-above the stack pointer gets plastered.  This doesn't happen on most other operating systems
-because there is a "red zone" of 128 bytes past the stack pointer which is safe from these
-things.  In this case, you can make room on the stack immediately:</p>
+<p>在Windows上你可能无法使用这种方法，因为当中断发生的时候，栈指针上的数据会被抹去。而在其他大多数的操作系统中，这件事不会发生，因为有一个128bytes的“红色区域”来保护栈指针的安全。在这个例子中，你可以给栈留出空间：</p>
 
 <pre class="prettyprint lang-gas"><span class="pln">example</span><span class="pun">:</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; </span><span class="kwd">sub</span><span class="pln"> rsp</span><span class="pun">,</span><span class="pln"> </span><span class="lit">24</span></pre>
 
-<p>so our stack looks like this:</p>
+<p>栈看上去是这个样子的：</p>
 
 <pre>                +----------+
          rsp    |    a     |
@@ -410,16 +381,15 @@ things.  In this case, you can make room on the stack immediately:</p>
                 +----------+
 </pre>
 
-<p>Here's the function now.  Note that we have to remember to replace the stack pointer before
-returning!</p>
+<p>下面就是我们的函数。注意到我们需要在返回前替换栈指针！</p>
 
 <pre class="prettyprint lang-asm"><span class="pln">&nbsp; &nbsp; &nbsp; &nbsp; global &nbsp;example<br>&nbsp; &nbsp; &nbsp; &nbsp; section .text<br>example:<br>&nbsp; &nbsp; &nbsp; &nbsp; sub &nbsp; &nbsp; </span><span class="kwd">rsp</span><span class="pln">, 24<br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; qword [</span><span class="kwd">rsp</span><span class="pln">+8], 7<br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span><span class="kwd">rax</span><span class="pln">, </span><span class="kwd">rdi</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; imul &nbsp; &nbsp;</span><span class="kwd">rax</span><span class="pln">, [</span><span class="kwd">rsp</span><span class="pln">+8]<br>&nbsp; &nbsp; &nbsp; &nbsp; add &nbsp; &nbsp; </span><span class="kwd">rax</span><span class="pln">, </span><span class="kwd">rsi</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; add &nbsp; &nbsp; </span><span class="kwd">rsp</span><span class="pln">, 24<br>&nbsp; &nbsp; &nbsp; &nbsp; ret</span></pre>
 
-<h2>Using NASM on OS X</h2>
+<h2>在OS X下使用NASM</h2>
 
 <p>TODO</p>
 
-<h2>Using NASM on Windows</h2>
+<h2>在Windows下使用NASM</h2>
 
 <p>TODO</p>
 
