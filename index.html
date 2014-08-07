@@ -34,7 +34,7 @@ Hello, World
 
 <h2>调用一个C语言库</h2>
 
-<p>了解C程序为何看上去总是从"main"函数开始执行吗？实际上，因为在C语言库的内部有一个 <code>_start</code> 标签!在 <code>_start</code> 处的代码会做一些初始化的工作，再调用 <code>main</code> 函数，然后程序最后会做一些清理工作，最终执行60号系统系统调用。因此，你只需要实现 <code>main</code> 函数。我们在汇编中可以这么做：
+<p>记得C程序为何看上去总是从"main"函数开始执行吗？实际上，因为在C语言库的内部有一个<code>_start</code>标签!在<code>_start</code>处的代码首先会做一些初始化的工作，然后调用 <code>main</code> 函数，最后会做一些清理工作，最终执行60号系统系统调用。因此，你只需要实现 <code>main</code> 函数。我们在汇编中可以这么做：
 
 </p><div class="filename"><span>hola.asm</span></div><pre class="prettyprint lang-asm"><span class="com">; ----------------------------------------------------------------------------------------</span><span class="pln"><br></span><span class="com">; Writes "Hola, mundo" to the console using a C library. Runs on Linux or any other system</span><span class="pln"><br></span><span class="com">; that does not use underscores for symbols in its C library. To assemble and run:</span><span class="pln"><br></span><span class="com">;</span><span class="pln"><br></span><span class="com">; &nbsp; &nbsp; nasm -felf64 hola.asm &amp;&amp; gcc hola.o &amp;&amp; ./a.out</span><span class="pln"><br></span><span class="com">; ----------------------------------------------------------------------------------------</span><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; global &nbsp;main<br>&nbsp; &nbsp; &nbsp; &nbsp; extern &nbsp;puts<br><br>&nbsp; &nbsp; &nbsp; &nbsp; section .text<br>main: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">; This is called by the C library startup code</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span><span class="kwd">rdi</span><span class="pln">, message &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span><span class="com">; First integer (or pointer) argument in rdi</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; call &nbsp; &nbsp;puts &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span><span class="com">; puts(message)</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; ret &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">; Return from main back into C library wrapper</span><span class="pln"><br>message:<br>&nbsp; &nbsp; &nbsp; &nbsp; db &nbsp; &nbsp; &nbsp;"Hola, mundo", 0 &nbsp; &nbsp; &nbsp; &nbsp;</span><span class="com">; Note strings must be terminated with 0 in C</span></pre>
 <pre class="console">$ <kbd>nasm -felf64 hola.asm &amp;&amp; gcc hola.o &amp;&amp; ./a.out</kbd>
@@ -45,7 +45,7 @@ Hola, mundo
 
 <p>当你为64位Linux写一个集成了C语言库的程序时，你必须遵循以下的调用约束条件，详情可以参考<a href="http://www.x86-64.org/documentation/abi.pdf">AMD64 ABI Reference</a>。你也可以从<a href="http://en.wikipedia.org/wiki/X86_calling_conventions#x86-64_Calling_Conventions">Wikipedia</a>得到这些信息。在这里列出最重要的几点：</p>
 <ul class="spaced">
-<li>传递参数时，按照从左到右的顺序，参数将依次保存在寄存器中。存放位置的寄存器顺序是确定的：
+<li>传递参数时，按照从左到右的顺序，将尽可能多的参数依次保存在寄存器中。存放位置的寄存器顺序是确定的：
   <ul class="compressed">
     <li>对于整数和指针，<code>rdi</code>，<code>rsi</code>，<code>rdx</code>，
         <code>rcx</code>，<code>r8</code>，<code>r9</code>。
@@ -53,7 +53,7 @@ Hola, mundo
         <code>xmm3</code>，<code>xmm4</code>，<code>xmm5</code>，<code>xmm6</code>，<code>xmm7</code>。
   </li></ul>
 </li>
-<li>剩下的参数将按照从有道做的顺序压入栈中，并在调用之后<em>由被调用函数推出栈</em>。</li>
+<li>剩下的参数将按照从右到左的顺序压入栈中，并在调用之后<em>由被调用函数推出栈</em>。</li>
 <li>等所有的参数传入后，会生成调用指令。所以当被调用函数得到控制权后，返回地址会被保存在<code>[rsp]</code>中，第一个局部变量会被保存在<code>[rsp+8]</code>中，以此类推。
 </li>
 <li><strong>栈指针<code>rsp</code>在调用前必须进行16字节对齐处理</strong>。当然，调用的过程中只会把一个8 bytes的返回地址推入栈中，所以当函数得到控制权时，<code>rsp</code>并没有对齐。你需要向栈中压入数据或者从<code>rsp</code>减去8来使之对齐。</li>
@@ -155,7 +155,7 @@ There are no command line arguments to average
 
 <h2>递归</h2>
 
-<p>可能让大家吃惊的是，事实上，实现一个递归并不需要什么特别的操作。你仅仅只需要向平时一样小心地保存寄存器的状态即可。</p>
+<p>可能让大家吃惊的是，事实上，实现一个递归并不需要什么特别的操作。你仅仅只需要像平时一样小心地保存寄存器的状态即可。</p>
 
 <div class="filename"><span>factorial.asm</span></div><pre class="prettyprint lang-asm"><span class="com">; ----------------------------------------------------------------------------</span><span class="pln"><br></span><span class="com">; An implementation of the recursive function:</span><span class="pln"><br></span><span class="com">;</span><span class="pln"><br></span><span class="com">; &nbsp; uint64_t factorial(uint64_t n) {</span><span class="pln"><br></span><span class="com">; &nbsp; &nbsp; &nbsp; return (n &lt;= 1) ? 1 : n * factorial(n-1);</span><span class="pln"><br></span><span class="com">; &nbsp; }</span><span class="pln"><br></span><span class="com">; ----------------------------------------------------------------------------</span><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; global &nbsp;factorial<br><br>&nbsp; &nbsp; &nbsp; &nbsp; section .text<br>factorial:<br>&nbsp; &nbsp; &nbsp; &nbsp; cmp &nbsp; &nbsp; </span><span class="kwd">rdi</span><span class="pln">, 1 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span><span class="com">; n &lt;= 1?</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; jnbe &nbsp; &nbsp;L1 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span><span class="com">; if not, go do a recursive call</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; mov &nbsp; &nbsp; </span><span class="kwd">rax</span><span class="pln">, 1 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span><span class="com">; otherwise return 1</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; ret<br>L1:<br>&nbsp; &nbsp; &nbsp; &nbsp; push &nbsp; &nbsp;</span><span class="kwd">rdi</span><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">; save n on stack (also aligns %rsp!)</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; dec &nbsp; &nbsp; </span><span class="kwd">rdi</span><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">; n-1</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; call &nbsp; &nbsp;factorial &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">; factorial(n-1), result goes in %rax</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; pop &nbsp; &nbsp; </span><span class="kwd">rdi</span><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">; restore n</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; imul &nbsp; &nbsp;</span><span class="kwd">rax</span><span class="pln">, </span><span class="kwd">rdi</span><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span><span class="com">; n * factorial(n-1), stored in %rax</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; ret</span></pre>
 <p>一个递归的例子：</p>
