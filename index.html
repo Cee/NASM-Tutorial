@@ -53,7 +53,7 @@ Hola, mundo
         <code>xmm3</code>，<code>xmm4</code>，<code>xmm5</code>，<code>xmm6</code>，<code>xmm7</code>。
   </li></ul>
 </li>
-<li>剩下的参数将按照从右到左的顺序压入栈中，并在调用之后<em>由被调用函数推出栈</em>。</li>
+<li>剩下的参数将按照从右到左的顺序压入栈中，并在调用之后<em>由调用函数推出栈</em>。</li>
 <li>等所有的参数传入后，会生成调用指令。所以当被调用函数得到控制权后，返回地址会被保存在<code>[rsp]</code>中，第一个局部变量会被保存在<code>[rsp+8]</code>中，以此类推。
 </li>
 <li><strong>栈指针<code>rsp</code>在调用前必须进行16字节对齐处理</strong>。当然，调用的过程中只会把一个8 bytes的返回地址推入栈中，所以当函数得到控制权时，<code>rsp</code>并没有对齐。你需要向栈中压入数据或者从<code>rsp</code>减去8来使之对齐。</li>
